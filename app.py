@@ -19,23 +19,38 @@ def zip_videos(download_folder, zip_filename):
     with zipfile.ZipFile(zip_filename, 'w') as zipf:
         for root, dirs, files in os.walk(download_folder):
             for file in files:
-                
                 file_path = os.path.join(root, file)
                 zipf.write(file_path, os.path.relpath(file_path, download_folder))
     print(f"All videos zipped into {zip_filename}")
 
+def get_channel_name(channel_url):
+    ydl_opts = {
+        'quiet': True,
+        'extract_flat': True,
+    }
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(channel_url, download=False)
+        return info.get('title', 'unknown_channel').replace(' ', '_')
+
 if __name__ == "__main__":
-    channel_url = input("Please enter the YouTube channel's videos URL: ")
+    channel_urls = [
+        "https://www.youtube.com/channel_name"
+    ]
 
     script_path = os.path.dirname(os.path.abspath(__file__))
-    download_folder = os.path.join(script_path, "downloaded_videos")
-    zip_filename = os.path.join(script_path, "downloaded_videos.zip")
 
-    print("Downloading videos...")
-    download_videos_from_channel(channel_url, download_folder)
-    print("Videos downloaded successfully.")
+    for channel_url in channel_urls:
+        print(f"Processing {channel_url}...")
+        channel_name = get_channel_name(channel_url)
 
-    print("Zipping videos...")
-    zip_videos(download_folder, zip_filename)
+        download_folder = os.path.join(script_path, channel_name)
+        zip_filename = os.path.join(script_path, f"{channel_name}.zip")
 
-    print("All done! The videos are downloaded and zipped.")
+        print(f"Downloading videos for {channel_name}...")
+        download_videos_from_channel(channel_url, download_folder)
+        print(f"Videos downloaded successfully for {channel_name}.")
+
+        print(f"Zipping videos for {channel_name}...")
+        zip_videos(download_folder, zip_filename)
+
+    print("All done! The videos from all channels are downloaded and zipped.")
