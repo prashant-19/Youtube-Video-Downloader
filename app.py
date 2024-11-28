@@ -2,14 +2,17 @@ import os
 import zipfile
 import yt_dlp
 
-def download_videos_from_channel(channel_url, download_folder):
+def download_videos_from_channel(channel_url, download_folder, archive_file):
     if not os.path.exists(download_folder):
         os.makedirs(download_folder)
 
     ydl_opts = {
-        'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best', 
-        'outtmpl': os.path.join(download_folder, '%(title)s_%(format_id)s.%(ext)s'),  
-        'ignoreerrors': True,  
+        'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best',
+        'outtmpl': os.path.join(download_folder, '%(title)s_%(format_id)s.%(ext)s'),
+        'ignoreerrors': True,
+        'download_archive': archive_file,  # Tracks completed downloads
+        'continuedl': True,               # Continue partially downloaded files
+        'noplaylist': False,              # Ensure playlist videos are downloaded
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -34,7 +37,7 @@ def get_channel_name(channel_url):
 
 if __name__ == "__main__":
     channel_urls = [
-        "https://www.youtube.com/channel_name"
+        "https://www.youtube.com/@channel_name/videos"
     ]
 
     script_path = os.path.dirname(os.path.abspath(__file__))
@@ -44,10 +47,11 @@ if __name__ == "__main__":
         channel_name = get_channel_name(channel_url)
 
         download_folder = os.path.join(script_path, channel_name)
+        archive_file = os.path.join(download_folder, "downloaded_videos.txt")  # Tracks downloaded videos
         zip_filename = os.path.join(script_path, f"{channel_name}.zip")
 
-        print(f"Downloading videos for {channel_name}...")
-        download_videos_from_channel(channel_url, download_folder)
+        print(f"Downloading videos for {channel_name}...\nThis will resume any incomplete downloads.")
+        download_videos_from_channel(channel_url, download_folder, archive_file)
         print(f"Videos downloaded successfully for {channel_name}.")
 
         print(f"Zipping videos for {channel_name}...")
